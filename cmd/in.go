@@ -9,6 +9,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/cobra"
 )
 
@@ -23,6 +24,16 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		var style = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("#1e1e2e")).
+			Background(lipgloss.Color("#ff8948")).
+			PaddingLeft(1).
+			PaddingRight(1).
+			MarginBottom(1).
+			MarginTop(1)
+
+		fmt.Println(style.Render("My main Goals for today:"))
 		if _, err := tea.NewProgram(ui.InitialModel()).Run(); err != nil {
 			fmt.Printf("could not start program: %s\n", err)
 			os.Exit(1)
