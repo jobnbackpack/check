@@ -1,4 +1,4 @@
-module jobnbackpack/checkin
+module jobnbackpack/check
 
 go 1.21.5
 
