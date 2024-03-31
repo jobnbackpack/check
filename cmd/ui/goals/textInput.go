@@ -1,4 +1,4 @@
-package ui
+package goals
 
 import (
 	"fmt"
@@ -17,14 +17,12 @@ var (
 	cursorStyle  = focusedStyle.Copy()
 	noStyle      = lipgloss.NewStyle()
 	helpStyle    = blurredStyle.Copy()
-
-	focusedButton = focusedStyle.Copy().Render("[ Submit ]")
-	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
 )
 
 type GoalsInputModel struct {
 	focusIndex int
 	Goals      []textinput.Model
+	Journal    bool
 }
 
 func InitialModel() GoalsInputModel {
@@ -81,7 +79,7 @@ func (m GoalsInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// submit with journal
 			if s == "enter" && m.focusIndex == len(m.Goals)+1 {
 				api.WriteToFile(m.Goals)
-				//TODO: open next view
+				m.Journal = true
 				return m, tea.Quit
 			}
 
@@ -92,7 +90,7 @@ func (m GoalsInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.focusIndex++
 			}
 
-			if m.focusIndex > len(m.Goals) {
+			if m.focusIndex > len(m.Goals)+1 {
 				m.focusIndex = 0
 			} else if m.focusIndex < 0 {
 				m.focusIndex = len(m.Goals)
@@ -145,11 +143,15 @@ func (m GoalsInputModel) View() string {
 		}
 	}
 
-	button := &blurredButton
+	submitButton := fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
 	if m.focusIndex == len(m.Goals) {
-		button = &focusedButton
+		submitButton = focusedStyle.Copy().Render("[ Submit ]")
 	}
-	fmt.Fprintf(&b, "\n\n%s\n\n", *button)
+	submitWithRefButton := fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit, and reflect yesterday"))
+	if m.focusIndex == len(m.Goals)+1 {
+		submitWithRefButton = focusedStyle.Copy().Render("[ Submit, and reflect yesterday ]")
+	}
+	fmt.Fprintf(&b, "\n\n%s %s\n\n", submitButton, submitWithRefButton)
 
 	return b.String()
 }

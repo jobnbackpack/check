@@ -5,7 +5,8 @@ package cmd
 
 import (
 	"fmt"
-	ui "jobnbackpack/check/cmd/ui/goals"
+	"jobnbackpack/check/cmd/ui/goals"
+	"jobnbackpack/check/cmd/ui/journal"
 	"os"
 	"time"
 
@@ -30,20 +31,33 @@ to quickly create a Cobra application.`,
 			Background(lipgloss.Color("#ff8948")).
 			PaddingLeft(1).
 			PaddingRight(1)
+		var runJournal bool
 
 		fmt.Println(style.Align(lipgloss.Center).Bold(true).MarginTop(1).Render(time.Now().Format("006-01-02")))
 		fmt.Println(style.MarginBottom(1).Render("My main Goals for today:"))
-		m, err := tea.NewProgram(ui.InitialModel()).Run()
+		m, err := tea.NewProgram(goals.InitialModel()).Run()
 		if err != nil {
 			fmt.Printf("could not start program: %s\n", err)
 			os.Exit(1)
 		}
 		// Assert the final tea.Model to our local model and print the choice.
-		if m, ok := m.(ui.GoalsInputModel); ok && m.Goals[0].Value() != "" {
+		if m, ok := m.(goals.GoalsInputModel); ok && m.Goals[0].Value() != "" {
 			fmt.Printf("\n---\nYour goals are: %s, %s and %s!\n",
 				m.Goals[0].Value(),
 				m.Goals[1].Value(),
 				m.Goals[2].Value())
+			runJournal = m.Journal
+		}
+
+		if runJournal {
+			m, err = tea.NewProgram(journal.InitialModel()).Run()
+			if err != nil {
+				fmt.Printf("could not start program: %s\n", err)
+				os.Exit(1)
+			}
+			if m, ok := m.(journal.JournalModel); ok && m.Textarea.Value() != "" {
+				fmt.Printf("\n---\nYour Journal: %s\n", m.Textarea.Value())
+			}
 		}
 	},
 }
