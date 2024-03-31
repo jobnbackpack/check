@@ -2,7 +2,7 @@ package ui
 
 import (
 	"fmt"
-	"os"
+	"jobnbackpack/check/cmd/api"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -22,18 +22,18 @@ var (
 	blurredButton = fmt.Sprintf("[ %s ]", blurredStyle.Render("Submit"))
 )
 
-type model struct {
+type GoalsInputModel struct {
 	focusIndex int
-	goals      []textinput.Model
+	Goals      []textinput.Model
 }
 
-func InitialModel() model {
-	m := model{
-		goals: make([]textinput.Model, 3),
+func InitialModel() GoalsInputModel {
+	m := GoalsInputModel{
+		Goals: make([]textinput.Model, 3),
 	}
 
 	var t textinput.Model
-	for i := range m.goals {
+	for i := range m.Goals {
 		t = textinput.New()
 		t.Cursor.Style = cursorStyle
 		t.CharLimit = 32
@@ -50,17 +50,17 @@ func InitialModel() model {
 			t.Placeholder = "Goal 3"
 		}
 
-		m.goals[i] = t
+		m.Goals[i] = t
 	}
 
 	return m
 }
 
-func (m model) Init() tea.Cmd {
+func (m GoalsInputModel) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m GoalsInputModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -73,16 +73,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			// Did the user press enter while the submit button was focused?
 			// If so, exit.
-			if s == "enter" && m.focusIndex == len(m.goals) {
-				var x = []byte{}
+			if s == "enter" && m.focusIndex == len(m.Goals) {
+				api.WriteToFile(m.Goals)
+				return m, tea.Quit
+			}
 
-				for i := 0; i < len(m.goals); i++ {
-					b := []byte("Goal " + fmt.Sprint(i+1) + " " + m.goals[i].Value() + "\n")
-					for j := 0; j < len(b); j++ {
-						x = append(x, b[j])
-					}
-				}
-				os.WriteFile("db.txt", x, 0644)
+			// submit with journal
+			if s == "enter" && m.focusIndex == len(m.Goals)+1 {
+				api.WriteToFile(m.Goals)
+				//TODO: open next view
 				return m, tea.Quit
 			}
 
@@ -93,25 +92,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.focusIndex++
 			}
 
-			if m.focusIndex > len(m.goals) {
+			if m.focusIndex > len(m.Goals) {
 				m.focusIndex = 0
 			} else if m.focusIndex < 0 {
-				m.focusIndex = len(m.goals)
+				m.focusIndex = len(m.Goals)
 			}
 
-			cmds := make([]tea.Cmd, len(m.goals))
-			for i := 0; i <= len(m.goals)-1; i++ {
+			cmds := make([]tea.Cmd, len(m.Goals))
+			for i := 0; i <= len(m.Goals)-1; i++ {
 				if i == m.focusIndex {
 					// Set focused state
-					cmds[i] = m.goals[i].Focus()
-					m.goals[i].PromptStyle = focusedStyle
-					m.goals[i].TextStyle = focusedStyle
+					cmds[i] = m.Goals[i].Focus()
+					m.Goals[i].PromptStyle = focusedStyle
+					m.Goals[i].TextStyle = focusedStyle
 					continue
 				}
 				// Remove focused state
-				m.goals[i].Blur()
-				m.goals[i].PromptStyle = noStyle
-				m.goals[i].TextStyle = noStyle
+				m.Goals[i].Blur()
+				m.Goals[i].PromptStyle = noStyle
+				m.Goals[i].TextStyle = noStyle
 			}
 
 			return m, tea.Batch(cmds...)
@@ -124,30 +123,30 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m *model) updateInputs(msg tea.Msg) tea.Cmd {
-	cmds := make([]tea.Cmd, len(m.goals))
+func (m *GoalsInputModel) updateInputs(msg tea.Msg) tea.Cmd {
+	cmds := make([]tea.Cmd, len(m.Goals))
 
 	// Only text inputs with Focus() set will respond, so it's safe to simply
 	// update all of them here without any further logic.
-	for i := range m.goals {
-		m.goals[i], cmds[i] = m.goals[i].Update(msg)
+	for i := range m.Goals {
+		m.Goals[i], cmds[i] = m.Goals[i].Update(msg)
 	}
 
 	return tea.Batch(cmds...)
 }
 
-func (m model) View() string {
+func (m GoalsInputModel) View() string {
 	var b strings.Builder
 
-	for i := range m.goals {
-		b.WriteString(m.goals[i].View())
-		if i < len(m.goals)-1 {
+	for i := range m.Goals {
+		b.WriteString(m.Goals[i].View())
+		if i < len(m.Goals)-1 {
 			b.WriteRune('\n')
 		}
 	}
 
 	button := &blurredButton
-	if m.focusIndex == len(m.goals) {
+	if m.focusIndex == len(m.Goals) {
 		button = &focusedButton
 	}
 	fmt.Fprintf(&b, "\n\n%s\n\n", *button)

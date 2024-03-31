@@ -7,6 +7,7 @@ import (
 	"fmt"
 	ui "jobnbackpack/check/cmd/ui/goals"
 	"os"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -25,18 +26,24 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var style = lipgloss.NewStyle().
-			Bold(true).
 			Foreground(lipgloss.Color("#1e1e2e")).
 			Background(lipgloss.Color("#ff8948")).
 			PaddingLeft(1).
-			PaddingRight(1).
-			MarginBottom(1).
-			MarginTop(1)
+			PaddingRight(1)
 
-		fmt.Println(style.Render("My main Goals for today:"))
-		if _, err := tea.NewProgram(ui.InitialModel()).Run(); err != nil {
+		fmt.Println(style.Align(lipgloss.Center).Bold(true).MarginTop(1).Render(time.Now().Format("006-01-02")))
+		fmt.Println(style.MarginBottom(1).Render("My main Goals for today:"))
+		m, err := tea.NewProgram(ui.InitialModel()).Run()
+		if err != nil {
 			fmt.Printf("could not start program: %s\n", err)
 			os.Exit(1)
+		}
+		// Assert the final tea.Model to our local model and print the choice.
+		if m, ok := m.(ui.GoalsInputModel); ok && m.Goals[0].Value() != "" {
+			fmt.Printf("\n---\nYour goals are: %s, %s and %s!\n",
+				m.Goals[0].Value(),
+				m.Goals[1].Value(),
+				m.Goals[2].Value())
 		}
 	},
 }
