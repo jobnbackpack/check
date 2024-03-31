@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -73,6 +74,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Did the user press enter while the submit button was focused?
 			// If so, exit.
 			if s == "enter" && m.focusIndex == len(m.goals) {
+				var x = []byte{}
+
+				for i := 0; i < len(m.goals); i++ {
+					b := []byte("Goal " + fmt.Sprint(i+1) + " " + m.goals[i].Value() + "\n")
+					for j := 0; j < len(b); j++ {
+						x = append(x, b[j])
+					}
+				}
+				os.WriteFile("db.txt", x, 0644)
 				return m, tea.Quit
 			}
 
