@@ -10,7 +10,7 @@ import (
 	"github.com/tursodatabase/go-libsql"
 )
 
-func ConnectDB() {
+func ConnectDB() *sql.DB {
 	dbName := util.GoDotEnvVariable("DB_NAME")
 	primaryUrl := util.GoDotEnvVariable("PRIMARY_URL")
 	authToken := util.GoDotEnvVariable("AUTH_TOKEN")
@@ -33,30 +33,34 @@ func ConnectDB() {
 	}
 	defer connector.Close()
 
-	db := sql.OpenDB(connector)
-	defer db.Close()
-
-	initGoalsTable(db)
-	queryGoals(db)
+	return sql.OpenDB(connector)
 }
 
 type Goal struct {
 	ID          int
 	Description string
 	Date        string
-	Complete    bool
+	Complete    int
 }
 
-func initGoalsTable(db *sql.DB) {
-	_, err := db.Query("CREATE TABLE IF NOT EXISTS tasks ( id INTEGER PRIMARY KEY AUTOINCREMENT, description TEXT NOT NULL, complete INTEGER NOT NULL, date TEXT NOT NULL)")
+func InitGoalsTable(db *sql.DB) {
+	_, err := db.Query("CREATE TABLE IF NOT EXISTS goals ( id INTEGER PRIMARY KEY AUTOINCREMENT, description TEXT NOT NULL, complete INTEGER NOT NULL, date TEXT NOT NULL)")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to execute query: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-func queryGoals(db *sql.DB) {
-	rows, err := db.Query("SELECT * FROM tasks")
+func InsertGoal(db *sql.DB, goal Goal) {
+	_, err := db.Query(fmt.Sprintf("INSERT INTO goals (description, complete, date) VALUES(%s, %d, %s)", goal.Description, goal.Complete, goal.Date))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to execute query: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func QueryGoals(db *sql.DB) {
+	rows, err := db.Query("SELECT * FROM goals")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to execute query: %v\n", err)
 		os.Exit(1)

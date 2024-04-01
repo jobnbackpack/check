@@ -4,7 +4,9 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"database/sql"
 	"fmt"
+	"jobnbackpack/check/db"
 	"jobnbackpack/check/ui/goals"
 	"jobnbackpack/check/ui/journal"
 	"os"
@@ -33,6 +35,8 @@ to quickly create a Cobra application.`,
 			PaddingRight(1)
 		var runJournal bool
 
+		var database *sql.DB
+
 		fmt.Println(style.Align(lipgloss.Center).Bold(true).MarginTop(1).Render(time.Now().Format("2006-01-02")))
 		fmt.Println(style.MarginBottom(1).Render("My main Goals for today:"))
 		m, err := tea.NewProgram(goals.InitialModel()).Run()
@@ -42,6 +46,12 @@ to quickly create a Cobra application.`,
 		}
 		// Assert the final tea.Model to our local model and print the choice.
 		if m, ok := m.(goals.GoalsInputModel); ok && m.Goals[0].Value() != "" {
+			database = db.ConnectDB()
+			// defer database.Close()
+
+			db.InitGoalsTable(database)
+			db.InsertGoal(database, db.Goal{Description: m.Goals[0].Value(), Complete: 0, Date: time.Now().Format("2006-01-02")})
+
 			fmt.Printf("\n---\nYour goals are: %s, %s and %s!\n",
 				m.Goals[0].Value(),
 				m.Goals[1].Value(),
