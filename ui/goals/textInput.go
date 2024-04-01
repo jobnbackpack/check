@@ -2,7 +2,7 @@ package goals
 
 import (
 	"fmt"
-	"jobnbackpack/check/cmd/api"
+	"jobnbackpack/check/api"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"

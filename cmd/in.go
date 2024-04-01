@@ -5,8 +5,8 @@ package cmd
 
 import (
 	"fmt"
-	"jobnbackpack/check/cmd/ui/goals"
-	"jobnbackpack/check/cmd/ui/journal"
+	"jobnbackpack/check/ui/goals"
+	"jobnbackpack/check/ui/journal"
 	"os"
 	"time"
 
@@ -33,7 +33,7 @@ to quickly create a Cobra application.`,
 			PaddingRight(1)
 		var runJournal bool
 
-		fmt.Println(style.Align(lipgloss.Center).Bold(true).MarginTop(1).Render(time.Now().Format("006-01-02")))
+		fmt.Println(style.Align(lipgloss.Center).Bold(true).MarginTop(1).Render(time.Now().Format("2006-01-02")))
 		fmt.Println(style.MarginBottom(1).Render("My main Goals for today:"))
 		m, err := tea.NewProgram(goals.InitialModel()).Run()
 		if err != nil {
